@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio — Deriv Capital</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const supabaseClient = createClient('https://wnnwrcgrwxdnrlzabdty.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndubndyY2dyd3hkbnJsemFiZHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzUxMTYsImV4cCI6MjA5MDIxMTExNn0.Nh-bL2KQPGznSeHxPpsz371vlXFXpTBLhPwRCABWhbQ');
+  </script>
+  <style>
+    :root,[data-theme="light"]{
+      --color-bg:#F7F7F7;--color-surface:#FFFFFF;--color-surface-2:#FAFAFA;--color-surface-offset:#F0F0F0;--color-divider:#E5E5E5;--color-border:#D6D6D6;
+      --color-text:#111111;--color-text-muted:#4B4B4B;--color-text-faint:#7A7A7A;--color-text-inverse:#FFFFFF;
+      --color-primary:#F97373;--color-primary-hover:#EF4444;--color-primary-active:#DC2626;--color-primary-highlight:#FEE2E2;
+      --radius-md:0.75rem;--radius-lg:1rem;--radius-xl:1.5rem;--radius-full:9999px;
+      --shadow-sm:0 1px 2px rgba(32,28,18,.06);--shadow-md:0 10px 30px rgba(32,28,18,.08);
+      --font-body:'Satoshi',Inter,sans-serif;--font-display:'Cabinet Grotesk','Satoshi',sans-serif;
+      --sidebar-w:240px;
+    }
+    [data-theme="dark"]{
+      --color-bg:#0D0D0D;--color-surface:#141414;--color-surface-2:#1C1C1C;--color-surface-offset:#222222;--color-divider:#2F2F2F;--color-border:#3A3A3A;
+      --color-text:#F5F5F5;--color-text-muted:#D1D1D1;--color-text-faint:#A3A3A3;--color-text-inverse:#111111;
+      --color-primary:#FCA5A5;--color-primary-hover:#F87171;--color-primary-active:#EF4444;--color-primary-highlight:#3B1F1F;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.25);--shadow-md:0 12px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font-body);background:var(--color-bg);color:var(--color-text);min-height:100vh;display:flex}
+    a{text-decoration:none;color:inherit}
+    button{font:inherit;border:0;background:none;color:inherit;cursor:pointer}
+    .sidebar{width:var(--sidebar-w);flex:none;height:100vh;position:sticky;top:0;background:var(--color-surface);border-right:1px solid var(--color-divider);display:flex;flex-direction:column;padding:1.5rem 1rem;overflow-y:auto}
+    .sidebar-brand{display:flex;align-items:center;gap:.6rem;padding:.25rem .5rem;margin-bottom:2rem}
+    .brand-mark{width:2.4rem;height:2.4rem;padding:.38rem;border-radius:.7rem;background:linear-gradient(135deg,var(--color-primary-highlight),transparent);border:1px solid color-mix(in srgb,var(--color-primary) 22%,transparent)}
+    .brand-name{font-family:var(--font-display);font-size:1.2rem;font-weight:900;color:#D31510;line-height:1}
+    .nav-section{margin-bottom:1.75rem}
+    .nav-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--color-text-faint);padding:0 .5rem;margin-bottom:.5rem}
+    .nav-item{display:flex;align-items:center;gap:.7rem;padding:.7rem .85rem;border-radius:.85rem;font-size:.92rem;font-weight:500;color:var(--color-text-muted);transition:.15s;margin-bottom:.15rem}
+    .nav-item:hover{background:var(--color-surface-offset);color:var(--color-text)}
+    .nav-item.active{background:var(--color-primary-highlight);color:var(--color-primary-active);font-weight:700}
+    [data-theme="dark"] .nav-item.active{color:var(--color-primary)}
+    .sidebar-bottom{margin-top:auto;padding-top:1rem;border-top:1px solid var(--color-divider)}
+    .user-pill{display:flex;align-items:center;gap:.7rem;padding:.75rem .85rem;border-radius:.85rem;cursor:pointer;transition:.15s}
+    .user-pill:hover{background:var(--color-surface-offset)}
+    .avatar{width:2.2rem;height:2.2rem;border-radius:999px;background:linear-gradient(135deg,#D31510,#f97373);display:grid;place-items:center;font-weight:700;font-size:.85rem;color:#fff;flex:none}
+    .user-name{font-size:.88rem;font-weight:700}
+    .user-role{font-size:.75rem;color:var(--color-text-faint)}
+    .main{flex:1;display:flex;flex-direction:column;min-height:100vh}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2rem;background:var(--color-surface);border-bottom:1px solid var(--color-divider);position:sticky;top:0;z-index:50}
+    .topbar-left h1{font-family:var(--font-display);font-size:1.35rem;font-weight:800;letter-spacing:-.02em}
+    .topbar-right{display:flex;align-items:center;gap:.75rem}
+    .icon-btn{width:2.5rem;height:2.5rem;border-radius:999px;border:1px solid var(--color-border);background:var(--color-surface);display:inline-flex;align-items:center;justify-content:center;color:var(--color-text-muted);transition:.15s}
+    .icon-btn:hover{background:var(--color-surface-offset)}
+    .menu-btn{display:none;width:2.5rem;height:2.5rem;border-radius:999px;border:1px solid var(--color-border);background:var(--color-surface);align-items:center;justify-content:center}
+    .content{padding:2rem;flex:1}
+    .card{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:1.25rem;padding:1.4rem;box-shadow:var(--shadow-sm)}
+    .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem}
+    .card-title{font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-faint)}
+
+    /* Portfolio summary */
+    .port-header{display:grid;grid-template-columns:1fr auto;gap:1.5rem;align-items:center;margin-bottom:1.5rem;padding:1.75rem;background:linear-gradient(135deg,#1a0808,#2d1010);border-radius:1.4rem;color:#fff}
+    .port-total{font-family:var(--font-display);font-size:clamp(2.2rem,3vw,3.5rem);font-weight:800;line-height:1;letter-spacing:-.04em}
+    .port-sub{color:rgba(255,255,255,.55);font-size:.88rem;margin-top:.4rem}
+    .port-badges{display:flex;gap:.6rem;margin-top:1rem;flex-wrap:wrap}
+    .port-badge{padding:.35rem .85rem;border-radius:999px;font-size:.78rem;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.85)}
+    .port-badge.green{background:rgba(67,122,34,.25);border-color:rgba(67,122,34,.4);color:#86efac}
+    .port-right{text-align:right}
+    .port-change{font-family:var(--font-display);font-size:1.8rem;font-weight:800;color:#86efac}
+    .port-change-sub{color:rgba(255,255,255,.45);font-size:.8rem;margin-top:.25rem}
+
+    /* Holdings table */
+    .hold-table{width:100%;border-collapse:collapse;font-size:.88rem}
+    .hold-table th{text-align:left;padding:.7rem .5rem;border-bottom:2px solid var(--color-divider);font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-faint);white-space:nowrap}
+    .hold-table th:not(:first-child){text-align:right}
+    .hold-table td{padding:.9rem .5rem;border-bottom:1px solid var(--color-divider);vertical-align:middle}
+    .hold-table td:not(:first-child){text-align:right}
+    .hold-table tr:last-child td{border-bottom:0}
+    .hold-table tr:hover td{background:var(--color-surface-offset)}
+    .asset-row{display:flex;align-items:center;gap:.85rem}
+    .asset-icon{width:2.4rem;height:2.4rem;border-radius:999px;display:grid;place-items:center;font-size:1.1rem;flex:none;border:1px solid var(--color-divider);background:var(--color-surface-offset)}
+    .asset-name{font-weight:700;font-size:.92rem}
+    .asset-ticker{font-size:.75rem;color:var(--color-text-faint)}
+    .val{font-weight:700;font-family:var(--font-display)}
+    .pill{display:inline-flex;align-items:center;padding:.22rem .7rem;border-radius:999px;font-size:.75rem;font-weight:700}
+    .pill.green{background:#dcfce7;color:#166534}
+    .pill.red{background:#fee2e2;color:#991b1b}
+    [data-theme="dark"] .pill.green{background:#14532d33;color:#4ade80}
+    [data-theme="dark"] .pill.red{background:#3b1f1f;color:#fca5a5}
+    .bar-wrap{background:var(--color-surface-offset);border-radius:999px;height:.5rem;width:5rem;display:inline-block;overflow:hidden;vertical-align:middle}
+    .bar-fill{height:100%;border-radius:999px;background:var(--color-primary)}
+
+    /* Grid */
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem}
+    .stat-val{font-family:var(--font-display);font-size:1.75rem;font-weight:800;letter-spacing:-.03em;line-height:1}
+    .stat-sub{font-size:.78rem;color:var(--color-text-faint);margin-top:.3rem}
+    .stat-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.2rem .55rem;border-radius:999px;font-size:.73rem;font-weight:700;margin-top:.5rem}
+    .stat-badge.up{background:#dcfce7;color:#166534}
+    .stat-badge.down{background:#fee2e2;color:#991b1b}
+    [data-theme="dark"] .stat-badge.up{background:#14532d33;color:#4ade80}
+    [data-theme="dark"] .stat-badge.down{background:#3b1f1f;color:#fca5a5}
+
+    /* Tabs */
+    .tabs{display:flex;gap:.25rem;padding:.3rem;background:var(--color-surface-offset);border-radius:999px;width:fit-content;margin-bottom:1.5rem}
+    .tab{padding:.55rem 1.2rem;border-radius:999px;font-size:.85rem;font-weight:600;color:var(--color-text-muted);cursor:pointer;transition:.15s}
+    .tab.active{background:var(--color-surface);color:var(--color-text);box-shadow:var(--shadow-sm)}
+
+    @media(max-width:900px){
+      .sidebar{position:fixed;left:-100%;z-index:200;transition:.3s;height:100vh}
+      .sidebar.open{left:0}
+      .menu-btn{display:inline-flex}
+      .grid-2,.grid-3{grid-template-columns:1fr}
+      .content{padding:1.25rem}
+      .topbar{padding:1rem 1.25rem}
+      .port-header{grid-template-columns:1fr}
+      .port-right{text-align:left}
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-brand">
+      <span class="brand-mark"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 48V16h11.5c13.5 0 20.5 5.4 20.5 16s-7 16-20.5 16H16Z" stroke="currentColor" stroke-width="4"/><path d="M25 24h6.5c6.4 0 10.5 2.6 10.5 8s-4.1 8-10.5 8H25V24Z" fill="currentColor"/></svg></span>
+      <span class="brand-name">Deriv Capital</span>
+    </a>
+    <nav class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+      <a href="portfolio.html" class="nav-item active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>Portfolio</a>
+      <a href="deposit-withdrawal.html" class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Deposit & Withdraw</a>
+      <a href="transactions.html" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Transactions
+      </a>
+    </nav>
+    <nav class="nav-section">
+      <div class="nav-label">Account</div>
+      <a href="account.html" class="nav-item"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Account Settings</a>
+      <a href="#" class="nav-item" onclick="handleLogout()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign Out</a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-pill"><div class="avatar">JD</div><div><div class="user-name">John Doe</div><div class="user-role">Alpha Plan</div></div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <button class="menu-btn" onclick="document.getElementById('sidebar').classList.toggle('open')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="topbar-left"><h1>Portfolio</h1></div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" data-theme-toggle><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Portfolio header -->
+      <div class="port-header">
+        <div>
+          <div style="font-size:.8rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.4);margin-bottom:.6rem">Total Portfolio Value</div>
+          <div class="port-total">$348,502,400</div>
+          <div class="port-sub">Last updated: Apr 8, 2026 · 09:00 UTC</div>
+          <div class="port-badges">
+            <div class="port-badge green">↑ 8.4% MTD</div>
+            <div class="port-badge">Alpha Plan</div>
+            <div class="port-badge">14 Active Positions</div>
+          </div>
+        </div>
+        <div class="port-right">
+          <div style="font-size:.78rem;color:rgba(255,255,255,.4);margin-bottom:.3rem">Total Gain (All Time)</div>
+          <div class="port-change">+$42.8M</div>
+          <div class="port-change-sub">Since inception</div>
+        </div>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-head"><span class="card-title">Best Performer</span></div>
+          <div class="stat-val">BTC</div>
+          <div class="stat-sub">Bitcoin · 60% allocation</div>
+          <div class="stat-badge up">↑ 4.2% today</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Yield Generated</span></div>
+          <div class="stat-val">$44.6K</div>
+          <div class="stat-sub">This month from yield sleeve</div>
+          <div class="stat-badge up">12.8% APY</div>
+        </div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">Risk Score</span></div>
+          <div class="stat-val">6.2/10</div>
+          <div class="stat-sub">Moderate-aggressive profile</div>
+          <div class="stat-badge down">Review due</div>
+        </div>
+      </div>
+
+      <!-- Holdings -->
+      <div class="tabs">
+        <div class="tab active">Holdings</div>
+        <div class="tab">History</div>
+        <div class="tab">Reports</div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><span class="card-title">Current Holdings</span><span style="font-size:.8rem;color:var(--color-text-faint)">Prices updated live</span></div>
+        <div style="overflow-x:auto">
+          <table class="hold-table">
+            <thead>
+              <tr>
+                <th>Asset</th>
+                <th>Price</th>
+                <th>Holdings</th>
+                <th>Value</th>
+                <th>Allocation</th>
+                <th>24h</th>
+                <th>P&L</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="asset-row"><div class="asset-icon">₿</div><div><div class="asset-name">Bitcoin</div><div class="asset-ticker">BTC</div></div></div></td>
+                <td><span class="val">$67,013</span></td>
+                <td><span class="val">3,098.4 BTC</span></td>
+                <td><span class="val">$207.5M</span></td>
+                <td><div style="display:flex;align-items:center;gap:.5rem;justify-content:flex-end"><div class="bar-wrap"><div class="bar-fill" style="width:60%"></div></div><span style="font-size:.8rem;font-weight:700">60%</span></div></td>
+                <td><span class="pill green">+4.2%</span></td>
+                <td style="color:#437a22;font-weight:700;font-family:var(--font-display)">+$8.4M</td>
+              </tr>
+              <tr>
+                <td><div class="asset-row"><div class="asset-icon">Ξ</div><div><div class="asset-name">Ethereum</div><div class="asset-ticker">ETH</div></div></div></td>
+                <td><span class="val">$2,040</span></td>
+                <td><span class="val">54,641 ETH</span></td>
+                <td><span class="val">$111.5M</span></td>
+                <td><div style="display:flex;align-items:center;gap:.5rem;justify-content:flex-end"><div class="bar-wrap"><div class="bar-fill" style="width:32%"></div></div><span style="font-size:.8rem;font-weight:700">32%</span></div></td>
+                <td><span class="pill red">-1.8%</span></td>
+                <td style="color:#D31510;font-weight:700;font-family:var(--font-display)">-$2.0M</td>
+              </tr>
+              <tr>
+                <td><div class="asset-row"><div class="asset-icon">₮</div><div><div class="asset-name">Tether USD</div><div class="asset-ticker">USDT</div></div></div></td>
+                <td><span class="val">$1.00</span></td>
+                <td><span class="val">27.85M USDT</span></td>
+                <td><span class="val">$27.85M</span></td>
+                <td><div style="display:flex;align-items:center;gap:.5rem;justify-content:flex-end"><div class="bar-wrap"><div class="bar-fill" style="width:8%"></div></div><span style="font-size:.8rem;font-weight:700">8%</span></div></td>
+                <td><span class="pill green">+0.01%</span></td>
+                <td style="color:#437a22;font-weight:700;font-family:var(--font-display)">+$194K</td>
+              </tr>
+              <tr>
+                <td><div class="asset-row"><div class="asset-icon">🟡</div><div><div class="asset-name">BNB</div><div class="asset-ticker">BNB</div></div></div></td>
+                <td><span class="val">$593</span></td>
+                <td><span class="val">2,843 BNB</span></td>
+                <td><span class="val">$1.69M</span></td>
+                <td><div style="display:flex;align-items:center;gap:.5rem;justify-content:flex-end"><div class="bar-wrap"><div class="bar-fill" style="width:0.5%"></div></div><span style="font-size:.8rem;font-weight:700">&lt;1%</span></div></td>
+                <td><span class="pill green">+2.1%</span></td>
+                <td style="color:#437a22;font-weight:700;font-family:var(--font-display)">+$35K</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const root=document.documentElement;
+    const toggles=document.querySelectorAll('[data-theme-toggle]');
+    let theme=localStorage.getItem('dc-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+    function applyTheme(){root.setAttribute('data-theme',theme);localStorage.setItem('dc-theme',theme);}
+    applyTheme();
+    toggles.forEach(t=>t.addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';applyTheme();}));
+
+    supabaseClient.auth.getSession().then(({data:{session}})=>{
+      if(!session) window.location.href='login.html';
+      else{
+        const meta=session.user.user_metadata;
+        const name=(meta.first_name||'')+' '+(meta.last_name||'');
+        const initials=((meta.first_name||'?')[0]+(meta.last_name||'?')[0]).toUpperCase();
+        document.querySelectorAll('.avatar').forEach(a=>a.textContent=initials);
+        document.querySelectorAll('.user-name').forEach(a=>a.textContent=name.trim()||session.user.email);
+      }
+    });
+
+    document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',function(){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));this.classList.add('active');}));
+  </script>
+</body>
+</html>

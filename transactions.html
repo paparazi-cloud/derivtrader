@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transaction History — Deriv Capital</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&f[]=cabinet-grotesk@500,700,800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const { createClient } = supabase;
+    const supabaseClient = createClient('https://wnnwrcgrwxdnrlzabdty.supabase.co','eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndubndyY2dyd3hkbnJsemFiZHR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzUxMTYsImV4cCI6MjA5MDIxMTExNn0.Nh-bL2KQPGznSeHxPpsz371vlXFXpTBLhPwRCABWhbQ');
+  </script>
+    <script>
+    // Instant theme - prevents flash
+    (function(){
+      var t=localStorage.getItem('dc-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+      document.documentElement.setAttribute('data-theme',t);
+    })();
+  </script>
+  <style>
+    :root,[data-theme="light"]{
+      --color-bg:#F7F7F7;--color-surface:#FFFFFF;--color-surface-2:#FAFAFA;--color-surface-offset:#F0F0F0;--color-divider:#E5E5E5;--color-border:#D6D6D6;
+      --color-text:#111111;--color-text-muted:#4B4B4B;--color-text-faint:#7A7A7A;--color-text-inverse:#FFFFFF;
+      --color-primary:#F97373;--color-primary-hover:#EF4444;--color-primary-active:#DC2626;--color-primary-highlight:#FEE2E2;
+      --color-success:#437a22;--color-success-bg:#dcfce7;
+      --radius-md:0.75rem;--radius-lg:1rem;--radius-full:9999px;
+      --shadow-sm:0 1px 2px rgba(32,28,18,.06);--shadow-md:0 10px 30px rgba(32,28,18,.08);
+      --font-body:'Satoshi',Inter,sans-serif;--font-display:'Cabinet Grotesk','Satoshi',sans-serif;
+      --sidebar-w:240px;
+    }
+    [data-theme="dark"]{
+      --color-bg:#0D0D0D;--color-surface:#141414;--color-surface-2:#1C1C1C;--color-surface-offset:#222222;--color-divider:#2F2F2F;--color-border:#3A3A3A;
+      --color-text:#F5F5F5;--color-text-muted:#D1D1D1;--color-text-faint:#A3A3A3;--color-text-inverse:#111111;
+      --color-primary:#FCA5A5;--color-primary-hover:#F87171;--color-primary-active:#EF4444;--color-primary-highlight:#3B1F1F;
+      --color-success-bg:#14532d33;
+      --shadow-sm:0 1px 2px rgba(0,0,0,.25);--shadow-md:0 12px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font-body);background:var(--color-bg);color:var(--color-text);min-height:100vh;display:flex}
+    a{text-decoration:none;color:inherit}
+    button{font:inherit;border:0;background:none;color:inherit;cursor:pointer}
+
+    /* Sidebar */
+    .sidebar{width:var(--sidebar-w);flex:none;height:100vh;position:sticky;top:0;background:var(--color-surface);border-right:1px solid var(--color-divider);display:flex;flex-direction:column;padding:1.5rem 1rem;overflow-y:auto}
+    .sidebar-brand{display:flex;align-items:center;gap:.6rem;padding:.25rem .5rem;margin-bottom:2rem}
+    .brand-mark{width:2.4rem;height:2.4rem;padding:.38rem;border-radius:.7rem;background:linear-gradient(135deg,var(--color-primary-highlight),transparent);border:1px solid color-mix(in srgb,var(--color-primary) 22%,transparent)}
+    .brand-name{font-family:var(--font-display);font-size:1.2rem;font-weight:900;color:#D31510;line-height:1}
+    .nav-section{margin-bottom:1.75rem}
+    .nav-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--color-text-faint);padding:0 .5rem;margin-bottom:.5rem}
+    .nav-item{display:flex;align-items:center;gap:.7rem;padding:.7rem .85rem;border-radius:.85rem;font-size:.92rem;font-weight:500;color:var(--color-text-muted);transition:.15s;margin-bottom:.15rem;cursor:pointer}
+    .nav-item:hover{background:var(--color-surface-offset);color:var(--color-text)}
+    .nav-item.active{background:var(--color-primary-highlight);color:var(--color-primary-active);font-weight:700}
+    [data-theme="dark"] .nav-item.active{color:var(--color-primary)}
+    .nav-item svg{flex:none;opacity:.7}
+    .nav-item.active svg{opacity:1}
+    .sidebar-bottom{margin-top:auto;padding-top:1rem;border-top:1px solid var(--color-divider)}
+    .user-pill{display:flex;align-items:center;gap:.7rem;padding:.75rem .85rem;border-radius:.85rem;cursor:pointer;transition:.15s}
+    .user-pill:hover{background:var(--color-surface-offset)}
+    .avatar{width:2.2rem;height:2.2rem;border-radius:999px;background:linear-gradient(135deg,#D31510,#f97373);display:grid;place-items:center;font-weight:700;font-size:.85rem;color:#fff;flex:none}
+    .user-info{flex:1;min-width:0}
+    .user-name{font-size:.88rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-role{font-size:.75rem;color:var(--color-text-faint)}
+
+    /* Main */
+    .main{flex:1;display:flex;flex-direction:column;min-height:100vh;overflow-x:hidden}
+    .topbar{display:flex;align-items:center;justify-content:space-between;padding:1.25rem 2rem;background:var(--color-surface);border-bottom:1px solid var(--color-divider);position:sticky;top:0;z-index:50}
+    .topbar-left h1{font-family:var(--font-display);font-size:1.35rem;font-weight:800;letter-spacing:-.02em}
+    .topbar-left p{font-size:.83rem;color:var(--color-text-faint);margin-top:.1rem}
+    .topbar-right{display:flex;align-items:center;gap:.75rem}
+    .icon-btn{width:2.5rem;height:2.5rem;border-radius:999px;border:1px solid var(--color-border);background:var(--color-surface);display:inline-flex;align-items:center;justify-content:center;color:var(--color-text-muted);transition:.15s}
+    .icon-btn:hover{background:var(--color-surface-offset);color:var(--color-text)}
+    .content{padding:2rem;flex:1}
+    .menu-btn{display:none;width:2.5rem;height:2.5rem;border-radius:999px;border:1px solid var(--color-border);background:var(--color-surface);align-items:center;justify-content:center}
+
+    /* Stats row */
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.75rem}
+    .stat-card{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:1.25rem;padding:1.35rem 1.4rem;box-shadow:var(--shadow-sm)}
+    .stat-label{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--color-text-faint);margin-bottom:.6rem}
+    .stat-val{font-family:var(--font-display);font-size:1.85rem;font-weight:800;letter-spacing:-.03em;line-height:1}
+    .stat-sub{font-size:.78rem;color:var(--color-text-faint);margin-top:.3rem}
+    .stat-pill{display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .6rem;border-radius:999px;font-size:.73rem;font-weight:700;margin-top:.4rem}
+    .stat-pill.green{background:#dcfce7;color:#166534}
+    .stat-pill.red{background:#fee2e2;color:#991b1b}
+    .stat-pill.blue{background:#dbeafe;color:#1d4ed8}
+    [data-theme="dark"] .stat-pill.green{background:#14532d33;color:#4ade80}
+    [data-theme="dark"] .stat-pill.red{background:#3b1f1f;color:#fca5a5}
+    [data-theme="dark"] .stat-pill.blue{background:#1e3a5f33;color:#93c5fd}
+
+    /* Filters */
+    .filters-bar{display:flex;align-items:center;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap}
+    .filter-tabs{display:flex;gap:.35rem;background:var(--color-surface);border:1px solid var(--color-divider);border-radius:.85rem;padding:.3rem}
+    .filter-tab{padding:.45rem 1rem;border-radius:.6rem;font-size:.85rem;font-weight:600;color:var(--color-text-faint);transition:.15s;cursor:pointer;white-space:nowrap}
+    .filter-tab:hover{color:var(--color-text)}
+    .filter-tab.active{background:var(--color-surface-offset);color:var(--color-text)}
+    .search-box{flex:1;min-width:180px;position:relative}
+    .search-box svg{position:absolute;left:.85rem;top:50%;transform:translateY(-50%);color:var(--color-text-faint);pointer-events:none}
+    .search-input{width:100%;padding:.65rem .85rem .65rem 2.4rem;border-radius:.85rem;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);font:inherit;font-size:.88rem;outline:none;transition:.2s}
+    .search-input:focus{border-color:var(--color-primary);box-shadow:0 0 0 3px var(--color-primary-highlight)}
+    .search-input::placeholder{color:var(--color-text-faint)}
+    .filter-select{padding:.65rem 1rem;border-radius:.85rem;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text);font:inherit;font-size:.85rem;cursor:pointer;outline:none;transition:.2s}
+    .filter-select:focus{border-color:var(--color-primary)}
+    .btn-export{display:inline-flex;align-items:center;gap:.45rem;padding:.65rem 1.15rem;border-radius:.85rem;border:1px solid var(--color-border);background:var(--color-surface);color:var(--color-text-muted);font-size:.85rem;font-weight:600;cursor:pointer;transition:.15s;white-space:nowrap}
+    .btn-export:hover{background:var(--color-surface-offset);color:var(--color-text)}
+
+    /* Table */
+    .table-card{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:1.25rem;overflow:hidden;box-shadow:var(--shadow-sm)}
+    .table-wrap{overflow-x:auto}
+    table{width:100%;border-collapse:collapse;font-size:.88rem}
+    thead tr{border-bottom:1px solid var(--color-divider);background:var(--color-surface-2)}
+    th{text-align:left;padding:.8rem 1.25rem;font-size:.73rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--color-text-faint);white-space:nowrap}
+    td{padding:.9rem 1.25rem;border-bottom:1px solid var(--color-divider);vertical-align:middle}
+    tbody tr:last-child td{border-bottom:0}
+    tbody tr{transition:.15s}
+    tbody tr:hover{background:var(--color-surface-2)}
+
+    /* Type badge */
+    .type-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.28rem .75rem;border-radius:999px;font-size:.75rem;font-weight:700;white-space:nowrap}
+    .type-badge-dot{width:.42rem;height:.42rem;border-radius:50%}
+    .type-badge.deposit{background:#dcfce7;color:#166534}
+    .type-badge.deposit .type-badge-dot{background:#22C55E}
+    .type-badge.withdrawal{background:#fee2e2;color:#991b1b}
+    .type-badge.withdrawal .type-badge-dot{background:#EF4444}
+    [data-theme="dark"] .type-badge.deposit{background:#14532d33;color:#4ade80}
+    [data-theme="dark"] .type-badge.deposit .type-badge-dot{background:#22C55E}
+    [data-theme="dark"] .type-badge.withdrawal{background:#3b1f1f;color:#fca5a5}
+    [data-theme="dark"] .type-badge.withdrawal .type-badge-dot{background:#EF4444}
+
+    /* Status badge */
+    .status-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .7rem;border-radius:999px;font-size:.73rem;font-weight:700}
+    .status-badge.completed{background:#dcfce7;color:#166534}
+    .status-badge.pending{background:#fef9c3;color:#854d0e}
+    .status-badge.rejected{background:#fee2e2;color:#991b1b}
+    [data-theme="dark"] .status-badge.completed{background:#14532d33;color:#4ade80}
+    [data-theme="dark"] .status-badge.pending{background:#422006;color:#fde047}
+    [data-theme="dark"] .status-badge.rejected{background:#3b1f1f;color:#fca5a5}
+
+    .amount-pos{font-family:var(--font-display);font-weight:700;color:#437a22}
+    .amount-neg{font-family:var(--font-display);font-weight:700;color:#D31510}
+    [data-theme="dark"] .amount-pos{color:#4ade80}
+    [data-theme="dark"] .amount-neg{color:#fca5a5}
+
+    .ref-code{font-family:monospace;font-size:.78rem;color:var(--color-text-faint);background:var(--color-surface-offset);padding:.2rem .5rem;border-radius:.35rem}
+
+    /* Empty state */
+    .empty-state{padding:4rem 2rem;text-align:center}
+    .empty-state svg{margin:0 auto 1rem;opacity:.25;display:block}
+    .empty-state h3{font-family:var(--font-display);font-size:1.1rem;font-weight:800;margin-bottom:.4rem}
+    .empty-state p{font-size:.88rem;color:var(--color-text-faint)}
+
+    /* Pagination */
+    .pagination{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-top:1px solid var(--color-divider)}
+    .page-info{font-size:.82rem;color:var(--color-text-faint)}
+    .page-btns{display:flex;gap:.4rem}
+    .page-btn{width:2.2rem;height:2.2rem;border-radius:.6rem;border:1px solid var(--color-border);background:var(--color-surface);display:grid;place-items:center;font-size:.82rem;font-weight:600;cursor:pointer;transition:.15s;color:var(--color-text-muted)}
+    .page-btn:hover{background:var(--color-surface-offset);color:var(--color-text)}
+    .page-btn.active{background:var(--color-primary);color:#fff;border-color:var(--color-primary)}
+    .page-btn:disabled{opacity:.35;cursor:not-allowed}
+
+    /* Detail modal */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(5px);z-index:500;display:none;align-items:center;justify-content:center;padding:1.5rem}
+    .modal-overlay.open{display:flex}
+    .modal{background:var(--color-surface);border:1px solid var(--color-divider);border-radius:1.5rem;padding:2rem;width:100%;max-width:460px;box-shadow:0 24px 60px rgba(0,0,0,.3);animation:modal-in .22s ease}
+    @keyframes modal-in{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .modal-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem}
+    .modal-title{font-family:var(--font-display);font-size:1.15rem;font-weight:800;letter-spacing:-.02em}
+    .modal-close{width:2rem;height:2rem;border-radius:999px;border:1px solid var(--color-border);background:var(--color-surface-offset);display:grid;place-items:center;cursor:pointer;flex:none}
+    .modal-row{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid var(--color-divider);font-size:.88rem}
+    .modal-row:last-child{border-bottom:0}
+    .modal-row-label{color:var(--color-text-faint);font-weight:500}
+    .modal-row-val{font-weight:700;text-align:right}
+
+    @media(max-width:900px){
+      .sidebar{position:fixed;left:-100%;z-index:200;transition:.3s;height:100vh}
+      .sidebar.open{left:0}
+      .main{width:100%}
+      .menu-btn{display:inline-flex}
+      .stats-row{grid-template-columns:repeat(2,1fr)}
+      .content{padding:1.25rem}
+      .topbar{padding:1rem 1.25rem}
+      .filters-bar{gap:.5rem}
+    }
+    @media(max-width:560px){
+      .stats-row{grid-template-columns:1fr 1fr}
+      .filter-tabs{display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <a href="index.html" class="sidebar-brand">
+      <span class="brand-mark">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 48V16h11.5c13.5 0 20.5 5.4 20.5 16s-7 16-20.5 16H16Z" stroke="currentColor" stroke-width="4"/><path d="M25 24h6.5c6.4 0 10.5 2.6 10.5 8s-4.1 8-10.5 8H25V24Z" fill="currentColor"/></svg>
+      </span>
+      <span class="brand-name">Deriv Capital</span>
+    </a>
+
+        <nav class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="dashboard.html" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+      <a href="portfolio.html" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        Portfolio
+      </a>
+      <a href="deposit-withdrawal.html" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Deposit & Withdraw
+      </a>
+      <a href="transactions.html" class="nav-item active">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Transactions
+      </a>
+      <a href="notifications.html" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Notifications
+        <span class="nav-badge" id="unread-badge" style="display:none">0</span>
+      </a>
+    </nav>
+
+        <nav class="nav-section">
+      <div class="nav-label">Account</div>
+      <a href="account.html" class="nav-item">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Account Settings
+      </a>
+      <a href="#" class="nav-item" onclick="handleLogout()">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Sign Out
+      </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="avatar" id="user-avatar">--</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-role">Investor</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:1rem">
+        <button class="menu-btn" onclick="toggleSidebar()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <div class="topbar-left">
+          <h1>Transaction History</h1>
+          <p id="topbar-date"></p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle theme">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-label">Total Deposited</div>
+          <div class="stat-val" id="stat-deposited">$0.00</div>
+          <div class="stat-sub">All time</div>
+          <div class="stat-pill green">↑ Deposits</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Withdrawn</div>
+          <div class="stat-val" id="stat-withdrawn">$0.00</div>
+          <div class="stat-sub">All time</div>
+          <div class="stat-pill red">↓ Withdrawals</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Transactions</div>
+          <div class="stat-val" id="stat-total">0</div>
+          <div class="stat-sub">All time</div>
+          <div class="stat-pill blue">All types</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending</div>
+          <div class="stat-val" id="stat-pending">0</div>
+          <div class="stat-sub">Awaiting processing</div>
+          <div class="stat-pill" id="stat-pending-pill" style="background:#fef9c3;color:#854d0e">Under review</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filters-bar">
+        <div class="filter-tabs">
+          <div class="filter-tab active" onclick="setTypeFilter('all',this)">All</div>
+          <div class="filter-tab" onclick="setTypeFilter('deposit',this)">Deposits</div>
+          <div class="filter-tab" onclick="setTypeFilter('withdrawal',this)">Withdrawals</div>
+        </div>
+        <div class="search-box">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input class="search-input" type="text" id="search-input" placeholder="Search by reference, method…" oninput="applyFilters()">
+        </div>
+        <select class="filter-select" id="status-filter" onchange="applyFilters()">
+          <option value="all">All Statuses</option>
+          <option value="completed">Completed</option>
+          <option value="pending">Pending</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select class="filter-select" id="date-filter" onchange="applyFilters()">
+          <option value="all">All Time</option>
+          <option value="7">Last 7 Days</option>
+          <option value="30">Last 30 Days</option>
+          <option value="90">Last 90 Days</option>
+        </select>
+        <button class="btn-export" onclick="exportCSV()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Method</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Reference</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="txn-tbody">
+              <tr><td colspan="7"><div class="empty-state">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+                <h3>Loading transactions…</h3>
+                <p>Please wait while we fetch your history.</p>
+              </div></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination" style="display:none">
+          <span class="page-info" id="page-info"></span>
+          <div class="page-btns" id="page-btns"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Transaction Details</div>
+        <button class="modal-close" onclick="closeModal()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ── Theme ── */
+        // ── Theme Toggle ──
+    let _theme = localStorage.getItem('dc-theme') || (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light');
+    function applyTheme() {
+      document.documentElement.setAttribute('data-theme', _theme);
+      localStorage.setItem('dc-theme', _theme);
+      var btn = document.getElementById('theme-btn');
+      if (btn) {
+        btn.innerHTML = _theme === 'dark'
+          ? '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>'
+          : '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      }
+    }
+    function toggleTheme() { _theme = _theme === 'dark' ? 'light' : 'dark'; applyTheme(); }
+    document.addEventListener('DOMContentLoaded', applyTheme);
+
+    /* ── Date ── */
+    document.getElementById('topbar-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+    /* ── Globals ── */
+    let allTxns = [], filteredTxns = [];
+    let typeFilter = 'all';
+    const PAGE_SIZE = 10;
+    let currentPage = 1;
+
+    /* ── Sample data (shown when Supabase table doesn't exist yet) ── */
+    const sampleData = [
+      { id: 'TXN-001', type: 'deposit',    amount: 25000,  method: 'Bank Transfer',  status: 'completed', created_at: '2023-01-12T09:14:00Z', reference: 'DEP-20230112-001' },
+      { id: 'TXN-002', type: 'withdrawal', amount: 5000,   method: 'Crypto (USDT)',  status: 'completed', created_at: '2023-02-08T11:05:00Z', reference: 'WDR-20230208-002' },
+      { id: 'TXN-003', type: 'deposit',    amount: 10000,  method: 'Crypto (USDT)',  status: 'completed', created_at: '2023-03-22T14:20:00Z', reference: 'DEP-20230322-003' },
+      { id: 'TXN-004', type: 'withdrawal', amount: 3500,   method: 'Bank Transfer',  status: 'completed', created_at: '2023-04-15T08:45:00Z', reference: 'WDR-20230415-004' },
+      { id: 'TXN-005', type: 'deposit',    amount: 50000,  method: 'Bank Transfer',  status: 'completed', created_at: '2023-05-30T10:30:00Z', reference: 'DEP-20230530-005' },
+      { id: 'TXN-006', type: 'withdrawal', amount: 8000,   method: 'Crypto (USDT)',  status: 'completed', created_at: '2023-06-18T16:00:00Z', reference: 'WDR-20230618-006' },
+      { id: 'TXN-007', type: 'deposit',    amount: 15000,  method: 'Debit Card',     status: 'completed', created_at: '2023-07-04T12:15:00Z', reference: 'DEP-20230704-007' },
+      { id: 'TXN-008', type: 'withdrawal', amount: 2000,   method: 'Bank Transfer',  status: 'rejected',  created_at: '2023-08-11T09:00:00Z', reference: 'WDR-20230811-008' },
+      { id: 'TXN-009', type: 'deposit',    amount: 7500,   method: 'Crypto (USDT)',  status: 'completed', created_at: '2023-09-25T14:45:00Z', reference: 'DEP-20230925-009' },
+      { id: 'TXN-010', type: 'withdrawal', amount: 12000,  method: 'Bank Transfer',  status: 'completed', created_at: '2023-10-07T11:30:00Z', reference: 'WDR-20231007-010' },
+      { id: 'TXN-011', type: 'deposit',    amount: 30000,  method: 'Bank Transfer',  status: 'completed', created_at: '2023-11-19T08:20:00Z', reference: 'DEP-20231119-011' },
+      { id: 'TXN-012', type: 'withdrawal', amount: 4500,   method: 'Crypto (USDT)',  status: 'completed', created_at: '2023-12-03T15:10:00Z', reference: 'WDR-20231203-012' },
+      { id: 'TXN-013', type: 'deposit',    amount: 20000,  method: 'Bank Transfer',  status: 'completed', created_at: '2024-01-08T10:00:00Z', reference: 'DEP-20240108-013' },
+      { id: 'TXN-014', type: 'withdrawal', amount: 6000,   method: 'Crypto (USDT)',  status: 'completed', created_at: '2024-02-14T13:25:00Z', reference: 'WDR-20240214-014' },
+      { id: 'TXN-015', type: 'deposit',    amount: 45000,  method: 'Crypto (USDT)',  status: 'completed', created_at: '2024-03-20T09:50:00Z', reference: 'DEP-20240320-015' },
+      { id: 'TXN-016', type: 'withdrawal', amount: 9500,   method: 'Bank Transfer',  status: 'completed', created_at: '2024-04-11T16:40:00Z', reference: 'WDR-20240411-016' },
+      { id: 'TXN-017', type: 'deposit',    amount: 12000,  method: 'Debit Card',     status: 'completed', created_at: '2024-05-05T11:15:00Z', reference: 'DEP-20240505-017' },
+      { id: 'TXN-018', type: 'withdrawal', amount: 3000,   method: 'Crypto (USDT)',  status: 'pending',   created_at: '2024-06-22T08:30:00Z', reference: 'WDR-20240622-018' },
+      { id: 'TXN-019', type: 'deposit',    amount: 60000,  method: 'Bank Transfer',  status: 'completed', created_at: '2024-07-17T14:00:00Z', reference: 'DEP-20240717-019' },
+      { id: 'TXN-020', type: 'withdrawal', amount: 15000,  method: 'Bank Transfer',  status: 'completed', created_at: '2024-08-29T10:45:00Z', reference: 'WDR-20240829-020' },
+      { id: 'TXN-021', type: 'deposit',    amount: 8500,   method: 'Crypto (USDT)',  status: 'completed', created_at: '2024-09-13T12:20:00Z', reference: 'DEP-20240913-021' },
+      { id: 'TXN-022', type: 'withdrawal', amount: 4000,   method: 'Debit Card',     status: 'rejected',  created_at: '2024-10-06T09:10:00Z', reference: 'WDR-20241006-022' },
+      { id: 'TXN-023', type: 'deposit',    amount: 35000,  method: 'Bank Transfer',  status: 'completed', created_at: '2024-11-21T15:35:00Z', reference: 'DEP-20241121-023' },
+      { id: 'TXN-024', type: 'withdrawal', amount: 7000,   method: 'Crypto (USDT)',  status: 'completed', created_at: '2024-12-10T11:00:00Z', reference: 'WDR-20241210-024' },
+    ];
+
+    /* ── Auth & Load ── */
+    supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) { window.location.href = 'login.html'; return; }
+
+      const meta = session.user.user_metadata;
+      const first = meta.first_name || '';
+      const last = meta.last_name || '';
+      const initials = ((first || session.user.email[0] || '?')[0] + (last || session.user.email[1] || '?')[0]).toUpperCase();
+      document.getElementById('user-avatar').textContent = initials;
+      document.getElementById('user-name').textContent = (first + ' ' + last).trim() || session.user.email;
+
+      // Load from Supabase transactions table
+      try {
+        const { data, error } = await supabaseClient
+          .from('transactions')
+          .select('*')
+          .eq('user_id', session.user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        allTxns = (data && data.length > 0) ? data : sampleData;
+      } catch {
+        allTxns = sampleData;
+      }
+
+      // Load real totals from profiles table
+      try {
+        const { data: profile } = await supabaseClient
+          .from('profiles')
+          .select('balance, total_deposited, total_withdrawn')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          const fmt = n => '$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+          document.getElementById('stat-deposited').textContent = fmt(profile.total_deposited);
+          document.getElementById('stat-withdrawn').textContent = fmt(profile.total_withdrawn);
+        }
+      } catch {}
+
+      updateStats();
+      applyFilters();
+    });
+
+    /* ── Stats ── */
+    function updateStats() {
+      const totalDep = allTxns.filter(t => t.type === 'deposit' && t.status === 'completed').reduce((s, t) => s + Number(t.amount), 0);
+      const totalWdr = allTxns.filter(t => t.type === 'withdrawal' && t.status === 'completed').reduce((s, t) => s + Number(t.amount), 0);
+      const pending = allTxns.filter(t => t.status === 'pending').length;
+      document.getElementById('stat-deposited').textContent = fmtAmt(totalDep);
+      document.getElementById('stat-withdrawn').textContent = fmtAmt(totalWdr);
+      document.getElementById('stat-total').textContent = allTxns.length;
+      document.getElementById('stat-pending').textContent = pending;
+    }
+
+    /* ── Filters ── */
+    function setTypeFilter(type, el) {
+      typeFilter = type;
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      currentPage = 1;
+      applyFilters();
+    }
+
+    function applyFilters() {
+      const search = document.getElementById('search-input').value.toLowerCase();
+      const status = document.getElementById('status-filter').value;
+      const days = document.getElementById('date-filter').value;
+      const cutoff = days === 'all' ? null : new Date(Date.now() - days * 864e5);
+
+      filteredTxns = allTxns.filter(t => {
+        if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+        if (status !== 'all' && t.status !== status) return false;
+        if (cutoff && new Date(t.created_at) < cutoff) return false;
+        if (search && !(t.reference || '').toLowerCase().includes(search) && !(t.method || '').toLowerCase().includes(search)) return false;
+        return true;
+      });
+
+      currentPage = 1;
+      renderTable();
+    }
+
+    /* ── Render ── */
+    function renderTable() {
+      const tbody = document.getElementById('txn-tbody');
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const page = filteredTxns.slice(start, start + PAGE_SIZE);
+
+      if (!filteredTxns.length) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          <h3>No transactions found</h3>
+          <p>Try adjusting your filters or search term.</p>
+        </div></td></tr>`;
+        document.getElementById('pagination').style.display = 'none';
+        return;
+      }
+
+      tbody.innerHTML = page.map(t => `
+        <tr>
+          <td>
+            <span class="type-badge ${t.type}">
+              <span class="type-badge-dot"></span>
+              ${t.type === 'deposit' ? 'Deposit' : 'Withdrawal'}
+            </span>
+          </td>
+          <td>
+            <span class="${t.type === 'deposit' ? 'amount-pos' : 'amount-neg'}">
+              ${t.type === 'deposit' ? '+' : '−'}${fmtAmt(t.amount)}
+            </span>
+          </td>
+          <td style="color:var(--color-text-muted);font-size:.85rem">${t.method || '—'}</td>
+          <td><span class="status-badge ${t.status}">${capitalize(t.status)}</span></td>
+          <td style="color:var(--color-text-muted);font-size:.85rem;white-space:nowrap">${fmtDate(t.created_at)}</td>
+          <td><span class="ref-code">${(t.reference || t.id || '—').slice(0, 18)}</span></td>
+          <td><button class="btn-export" style="font-size:.78rem;padding:.35rem .75rem" onclick='openModal(${JSON.stringify(t)})'>Details</button></td>
+        </tr>`).join('');
+
+      renderPagination();
+    }
+
+    function renderPagination() {
+      const total = filteredTxns.length;
+      const pages = Math.ceil(total / PAGE_SIZE);
+      const start = (currentPage - 1) * PAGE_SIZE + 1;
+      const end = Math.min(currentPage * PAGE_SIZE, total);
+
+      document.getElementById('pagination').style.display = total > PAGE_SIZE ? 'flex' : 'none';
+      document.getElementById('page-info').textContent = `Showing ${start}–${end} of ${total} transactions`;
+
+      const btns = document.getElementById('page-btns');
+      btns.innerHTML = '';
+
+      // Prev
+      const prev = document.createElement('button');
+      prev.className = 'page-btn';
+      prev.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>';
+      prev.disabled = currentPage === 1;
+      prev.onclick = () => { currentPage--; renderTable(); };
+      btns.appendChild(prev);
+
+      // Page numbers
+      for (let i = 1; i <= pages; i++) {
+        if (pages > 7 && (i > 2 && i < currentPage - 1)) { if (i === 3) { const d = document.createElement('span'); d.textContent = '…'; d.style.cssText = 'padding:0 .25rem;color:var(--color-text-faint);font-size:.82rem;display:grid;place-items:center'; btns.appendChild(d); } continue; }
+        if (pages > 7 && (i > currentPage + 1 && i < pages - 1)) { if (i === currentPage + 2) { const d = document.createElement('span'); d.textContent = '…'; d.style.cssText = 'padding:0 .25rem;color:var(--color-text-faint);font-size:.82rem;display:grid;place-items:center'; btns.appendChild(d); } continue; }
+        const btn = document.createElement('button');
+        btn.className = 'page-btn' + (i === currentPage ? ' active' : '');
+        btn.textContent = i;
+        btn.onclick = () => { currentPage = i; renderTable(); };
+        btns.appendChild(btn);
+      }
+
+      // Next
+      const next = document.createElement('button');
+      next.className = 'page-btn';
+      next.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>';
+      next.disabled = currentPage === pages;
+      next.onclick = () => { currentPage++; renderTable(); };
+      btns.appendChild(next);
+    }
+
+    /* ── Modal ── */
+    function openModal(t) {
+      document.getElementById('modal-content').innerHTML = `
+        <div class="modal-row"><span class="modal-row-label">Type</span><span class="modal-row-val"><span class="type-badge ${t.type}"><span class="type-badge-dot"></span>${t.type === 'deposit' ? 'Deposit' : 'Withdrawal'}</span></span></div>
+        <div class="modal-row"><span class="modal-row-label">Amount</span><span class="modal-row-val ${t.type === 'deposit' ? 'amount-pos' : 'amount-neg'}">${t.type === 'deposit' ? '+' : '−'}${fmtAmt(t.amount)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Method</span><span class="modal-row-val">${t.method || '—'}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Status</span><span class="modal-row-val"><span class="status-badge ${t.status}">${capitalize(t.status)}</span></span></div>
+        <div class="modal-row"><span class="modal-row-label">Date & Time</span><span class="modal-row-val">${fmtDateTime(t.created_at)}</span></div>
+        <div class="modal-row"><span class="modal-row-label">Reference</span><span class="modal-row-val"><span class="ref-code">${t.reference || t.id || '—'}</span></span></div>
+        ${t.notes ? `<div class="modal-row"><span class="modal-row-label">Notes</span><span class="modal-row-val" style="font-weight:400;color:var(--color-text-muted)">${t.notes}</span></div>` : ''}
+      `;
+      document.getElementById('detail-modal').classList.add('open');
+    }
+
+    function closeModal() { document.getElementById('detail-modal').classList.remove('open'); }
+    document.getElementById('detail-modal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+    /* ── Export CSV ── */
+    function exportCSV() {
+      const rows = [['Type', 'Amount', 'Method', 'Status', 'Date', 'Reference']];
+      filteredTxns.forEach(t => rows.push([t.type, t.amount, t.method || '', t.status, fmtDate(t.created_at), t.reference || t.id || '']));
+      const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
+      const a = document.createElement('a');
+      a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+      a.download = `transactions-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+    }
+
+    /* ── Helpers ── */
+    function fmtAmt(n) { return '$' + Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    function fmtDate(d) { return d ? new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'; }
+    function fmtDateTime(d) { return d ? new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'; }
+    function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : '—'; }
+
+    /* ── Misc ── */
+    function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+    document.addEventListener('click', e => { const sb = document.getElementById('sidebar'); if (sb.classList.contains('open') && !sb.contains(e.target) && !e.target.closest('.menu-btn')) sb.classList.remove('open'); });
+
+    async function handleLogout(){
+      try {
+        await supabaseClient.auth.signOut();
+      } catch(e) {}
+      localStorage.removeItem('dc-theme');
+      window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
